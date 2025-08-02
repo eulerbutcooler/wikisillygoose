@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Quicksand } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,8 +12,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const quickSand = Quicksand({
+  variable: "--font-quicksand",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "wikisilly🪿",
+  title: "wikisillygoose 🔍🪿",
   description: "a fun random wikipedia article finder",
 };
 
@@ -25,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${quickSand.variable} antialiased`}
       >
         {children}
       </body>
