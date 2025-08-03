@@ -9,8 +9,8 @@ export default function LocationModal() {
   if (!showModal) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-500">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl transform transition-all duration-300 animate-in fade-in-0 zoom-in-95">
         {loading && (
           <>
             <div className="flex justify-between items-center p-6 border-b">

@@ -4,9 +4,11 @@ import { useEffect, useRef } from "react";
 import ThreeGlobe from "three-globe";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/Addons.js";
+import { useLocationStore } from "../utils/store";
 import { UseGeminiLocations } from "../utils/geminihook";
 
 export default function Globe() {
+  const showModal = useLocationStore((state) => state.showModal);
   const globeContainer = useRef<HTMLDivElement | null>(null);
   const { fetchLocations } = UseGeminiLocations();
 
@@ -148,6 +150,9 @@ export default function Globe() {
         cursor: "pointer",
         userSelect: "none",
       }}
+      className={`transition-all duration-500 ease-in-out ${
+        showModal ? "blur-sm scale-95" : "blur-none scale-100"
+      }`}
     ></div>
   );
 }
