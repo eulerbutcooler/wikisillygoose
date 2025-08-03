@@ -193,12 +193,8 @@ function createGlobe() {
     animateIn: true,
   });
 
-  globe.globeImageUrl(
-    "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
-  );
-  globe.bumpImageUrl(
-    "https://unpkg.com/three-globe/example/img/earth-topology.png"
-  );
+  globe.globeImageUrl("earth-blue-marble.jpg");
+  globe.bumpImageUrl("earth-topology.png");
   return globe;
 }
 
