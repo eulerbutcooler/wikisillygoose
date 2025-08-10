@@ -72,8 +72,9 @@ export async function POST(request: NextRequest) {
     }
   } catch (err) {
     console.error("Error calling Gemini API:", err);
+    console.log(err);
     return NextResponse.json(
-      { error: "Failed to get locations from AI" },
+      { error: "Failed to get locations from AI", err },
       { status: 500 }
     );
   }
