@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     Only return the JSON array, no additional text. If you don't give me the pure JSON array without any other characters i'll switch to claude`;
 
     const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
     const response = result.text;
