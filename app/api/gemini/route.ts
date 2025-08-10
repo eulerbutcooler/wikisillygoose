@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       }
     ]
     
-    Only return the JSON array, no additional text.`;
+    Only return the JSON array, no additional text. If you don't give me the pure JSON array without any other characters i'll switch to claude`;
 
     const result = await ai.models.generateContent({
       model: "gemini-2.0-flash",
@@ -61,10 +61,9 @@ export async function POST(request: NextRequest) {
       }
 
       cleanedResponse = cleanedResponse.trim();
-
       const sillyg = JSON.parse(cleanedResponse);
       return NextResponse.json({ sillyg });
-    } catch (error) {
+    } catch {
       console.error("Failed to parse JSON:", response);
       return NextResponse.json(
         { error: "Failed to parse AI response", rawResponse: response },

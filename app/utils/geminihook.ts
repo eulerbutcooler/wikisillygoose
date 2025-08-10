@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocationStore } from "./store";
-import { Location, UseGeminiLocationsResult } from "../types/types";
+import { UseGeminiLocationsResult } from "../types/types";
 
 export function UseGeminiLocations(): UseGeminiLocationsResult {
   const [error, setError] = useState<string | null>(null);

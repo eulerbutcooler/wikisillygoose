@@ -7,10 +7,10 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
 
 const quickSand = Quicksand({
   variable: "--font-quicksand",
@@ -18,7 +18,7 @@ const quickSand = Quicksand({
 });
 
 export const metadata: Metadata = {
-  title: "wikisillygoose 🔍🪿",
+  title: "wikisillygoose",
   description: "a fun random wikipedia article finder",
 };
 

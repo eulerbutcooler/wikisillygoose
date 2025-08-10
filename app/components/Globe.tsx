@@ -11,6 +11,7 @@ export default function Globe() {
   const showModal = useLocationStore((state) => state.showModal);
   const globeContainer = useRef<HTMLDivElement | null>(null);
   const { fetchLocations } = UseGeminiLocations();
+  const isInitialized = useRef(false);
 
   const fetchLocationsRef = useRef(fetchLocations);
 
@@ -19,13 +20,14 @@ export default function Globe() {
   }, [fetchLocations]);
 
   useEffect(() => {
-    if (!globeContainer.current) {
+    if (!globeContainer.current || isInitialized.current) {
       return;
     }
 
-    const { scene, camera, renderer } = initializeThreeJS(
-      globeContainer.current
-    );
+    isInitialized.current = true;
+    const container = globeContainer.current;
+
+    const { scene, camera, renderer } = initializeThreeJS(container);
     const globe = createGlobe();
     scene.add(globe);
 
@@ -33,8 +35,9 @@ export default function Globe() {
     const controls = setupControls(camera, renderer);
 
     let isDragging = false;
-    let pointerDownPosition = new THREE.Vector2();
-    let dragThreshold = 5;
+    const pointerDownPosition = new THREE.Vector2();
+    const isMobile = "ontouchstart" in window;
+    const dragThreshold = isMobile ? 10 : 5;
     let pointerDownCoords = { x: 0, y: 0 };
 
     const handleGlobeClick = (event: MouseEvent) => {
@@ -63,11 +66,6 @@ export default function Globe() {
           (180 / Math.PI);
 
         fetchLocationsRef.current(lat, lng);
-        // console.log(
-        //   `Globe coordinates: Latitude ${lat.toFixed(
-        //     2
-        //   )}°, Longitude ${lng.toFixed(2)}°`
-        // );
       }
     };
 
@@ -101,69 +99,61 @@ export default function Globe() {
       }
     };
 
-    globeContainer.current.addEventListener(
-      "pointerdown",
-      handlePointerDown,
-      true
-    );
-    globeContainer.current.addEventListener(
-      "pointermove",
-      handlePointerMove,
-      true
-    );
-    globeContainer.current.addEventListener("pointerup", handlePointerUp, true);
+    container.addEventListener("pointerdown", handlePointerDown, {
+      capture: true,
+      passive: false,
+    });
+    container.addEventListener("pointermove", handlePointerMove, {
+      capture: true,
+      passive: true,
+    });
+    container.addEventListener("pointerup", handlePointerUp, {
+      capture: true,
+      passive: false,
+    });
 
     startAnimationLoop(controls, scene, camera, renderer);
 
     return () => {
-      if (globeContainer.current) {
-        globeContainer.current.removeEventListener(
-          "pointerdown",
-          handlePointerDown,
-          true
-        );
-        globeContainer.current.removeEventListener(
-          "pointermove",
-          handlePointerMove,
-          true
-        );
-        globeContainer.current.removeEventListener(
-          "pointerup",
-          handlePointerUp,
-          true
-        );
-      }
+      isInitialized.current = false;
 
+      container.removeEventListener("pointerdown", handlePointerDown, true);
+      container.removeEventListener("pointermove", handlePointerMove, true);
+      container.removeEventListener("pointerup", handlePointerUp, true);
+
+      controls.dispose();
       renderer.dispose();
-      if (globeContainer.current?.contains(renderer.domElement)) {
-        globeContainer.current.removeChild(renderer.domElement);
-      }
+
+      container.innerHTML = "";
     };
   }, []);
 
   return (
     <div
       ref={globeContainer}
-      style={{
-        width: "100vw",
-        height: "100vh",
-        cursor: "pointer",
-        userSelect: "none",
-      }}
-      className={`transition-all duration-500 ease-in-out ${
+      className={`absolute inset-0 transition-all duration-500 ease-in-out ${
         showModal ? "blur-sm scale-95" : "blur-none scale-100"
       }`}
+      style={{
+        userSelect: "none",
+        touchAction: "manipulation",
+        WebkitOverflowScrolling: "touch",
+        WebkitTouchCallout: "none",
+        WebkitUserSelect: "none",
+        overflow: "hidden",
+      }}
     ></div>
   );
 }
 
 function initializeThreeJS(container: HTMLDivElement) {
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
   const camera = new THREE.PerspectiveCamera(
     75,
     container.offsetWidth / container.offsetHeight,
     0.1,
-    1000
+    2000
   );
 
   const lat = 15 * (Math.PI / 180);
@@ -176,15 +166,52 @@ function initializeThreeJS(container: HTMLDivElement) {
 
   camera.lookAt(0, 0, 0);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    powerPreference: "high-performance",
+    stencil: false,
+    depth: true,
+  });
   renderer.setSize(container.offsetWidth, container.offsetHeight);
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 4));
+  const pixelRatio = Math.min(window.devicePixelRatio, 2);
+  renderer.setPixelRatio(pixelRatio);
+
+  renderer.shadowMap.enabled = false;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   renderer.domElement.style.display = "block";
+  renderer.domElement.style.touchAction = "none";
+  renderer.domElement.style.cursor = "pointer";
   container.appendChild(renderer.domElement);
 
-  return { scene, camera, renderer };
+  const starcount = 2000;
+  const starGeo = new THREE.BufferGeometry();
+  const positions = new Float32Array(starcount * 3);
+
+  for (let i = 0; i < starcount; i++) {
+    const r = 1000;
+    const theta = Math.random() * 2 * Math.PI;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    positions.set([x, y, z], i * 3);
+  }
+
+  starGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+  const starMat = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 1.5,
+    sizeAttenuation: true,
+  });
+
+  const starPoints = new THREE.Points(starGeo, starMat);
+  scene.add(starPoints);
+
+  return { scene, camera, renderer, starPoints };
 }
 
 function createGlobe() {
@@ -193,8 +220,7 @@ function createGlobe() {
     animateIn: true,
   });
 
-  globe.globeImageUrl("earth-blue-marble.jpg");
-  globe.bumpImageUrl("earth-topology.png");
+  globe.globeImageUrl("8kearth.jpg");
   return globe;
 }
 
@@ -221,11 +247,22 @@ function setupControls(camera: THREE.Camera, renderer: THREE.WebGLRenderer) {
   controls.minAzimuthAngle = -Infinity;
   controls.maxAzimuthAngle = Infinity;
 
-  controls.rotateSpeed = 0.5;
-  controls.zoomSpeed = 0.8;
+  controls.rotateSpeed = 0.8;
+  controls.zoomSpeed = 1.2;
 
   controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
+  controls.dampingFactor = 0.08;
+
+  controls.touches = {
+    ONE: THREE.TOUCH.ROTATE,
+    TWO: THREE.TOUCH.DOLLY_PAN,
+  };
+
+  if (controls.domElement) {
+    controls.domElement.addEventListener("contextmenu", (e) =>
+      e.preventDefault()
+    );
+  }
 
   return controls;
 }
